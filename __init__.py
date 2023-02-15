@@ -1,40 +1,60 @@
 import time
 
-from cso.cuckoo_search import CuckooSearchOptimization
-from helpers.data_init import data_init, DataLocation, DataAttributes
-from helpers.data_queries import antecedent_consequent_mocanar
-from helpers.helper import translate_rule
+from ba.bat_algorithm import BatAlgorithm
+from helpers.data_init import data_init
+
+
+def translate_rule(rule, attributes, data):
+    antec_txt = "If "
+    conseq_txt = " Then "
+    for c, r in enumerate(rule):
+        if c > 0 and c < rule[0] and r != 0:
+            antec_txt += attributes[c - 1] + " is "
+            interval = data[attributes[c - 1]].query("id == " + str(r))["interval"].describe()[2]
+            antec_txt += str(interval) + ", "
+        elif c > 0 and c >= rule[0] and r != 0:
+            conseq_txt += attributes[c - 1] + " is "
+            interval = data[attributes[c - 1]].query("id == " + str(r))["interval"].describe()[2]
+            conseq_txt += str(interval) + ", "
+    return antec_txt + conseq_txt
+
 
 if __name__ == '__main__':
-    d = data_init(DataLocation.BODY_FAT.value, DataAttributes.BODY_FAT.value)
+    basketball_attributes = ["assists_per_minute", "height", "time_played", "age", "points_per_minute"]
+    basketball_data_location = "../data/BK.dat"
+    basketball_data = data_init(basketball_data_location, basketball_attributes)
 
-    mocanar = CuckooSearchOptimization(data=d,
-                                       population_size=500,
-                                       pa=0.3,
-                                       pmut=0.1,
-                                       num_of_tourn=15,
-                                       max_generation=5,
-                                       num_of_increment=1,
-                                       num_of_rnd_cuckoo=1,
-                                       w1=0.2, w2=0.5, w3=0.3,
-                                       min_support=0,
-                                       min_confidence=0)
+    quake_attributes = ["focal_depth", "latitude", "longitude", "richter"]
+    quake_data_location = "../data/QU.dat"
+    quake_data = data_init(quake_data_location, quake_attributes)
+
+    bat = BatAlgorithm(data=basketball_data,
+                       population_size=50,
+                       iterations=5,
+                       pareto_points=5,
+                       alpha=0.4, beta=0.3, gamma=0.2, delta=0.1,
+                       min_support=0.2, min_confidence=0.5)
+    o, c, s, i, j = 0, 0, 0, 0, 0
 
     start = time.time()
 
-    rules = mocanar.multi_objective_cuckoo_search_algorithm()
-    o, c, s, i = 0, 0, 0, 0
+    rules = bat.mob_arm()
+
+    end = time.time()
 
     for r in rules:
-        print(r.__str__())
-        print(translate_rule(r.rule, DataAttributes.BODY_FAT.value, antecedent_consequent_mocanar))
-        o += r.comp
+        print(r.rule, translate_rule(r.rule, bat.attributes, bat.data), r.obj, r.supp, r.conf, r.comp, r.inter, r.rule)
+        o += r.obj
         c += r.conf
         s += r.supp
         i += r.inter
-    l = len(rules)
-    print("means comp, conf, supp, inter", o / l, c / l, s / l, i / l)
+        j += r.comp
 
-    end = time.time()
-    print("TIME", end-start)
-    print("RULES", l)
+    r_len = len(rules)
+    if r_len == 0:
+        r_len = 1
+    print("rules", r_len)
+    print("means obj, conf, supp, inter, comp", o / r_len, c / r_len, s / r_len, i / r_len, j/r_len)
+
+    print("time", end - start)
+    print(bat.evolution_counter)
