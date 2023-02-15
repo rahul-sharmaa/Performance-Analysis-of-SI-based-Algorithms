@@ -1,21 +1,26 @@
-from ba.bat_algorithm import BatAlgorithm
+from aco.ant_colony import AntColonyOptimization
 from helpers.data_init import data_init, DataLocation, DataAttributes
-from helpers.data_queries import antecedent_consequent_mob_arm
+from helpers.data_queries import antecedent_consequent_aco_r
 from helpers.helper import translate_rule
 
 if __name__ == '__main__':
     location = DataLocation.BASKETBALL.value
     attributes = DataAttributes.BASKETBALL.value
 
-    bat = BatAlgorithm(data=data_init(location, attributes),
-                       population_size=50,
-                       iterations=40,
-                       pareto_points=5,
-                       alpha=0.4, beta=0.3, gamma=0.2, delta=0.1,
-                       min_support=0.2, min_confidence=0.5)
+    aco = AntColonyOptimization(data=data_init(location, attributes),
+                                archive_size=50,
+                                ant_colony_size=50,
+                                max_iterations=200,
+                                alpha1=4,
+                                alpha2=4,
+                                alpha3=1,
+                                alpha4=0.001,
+                                alpha5=1,
+                                q=0.1,
+                                e=0.85)
 
-    rules = bat.multi_objective_bat_algorithm()
+    rules = aco.ant_colony_optimization_for_continuous_domains()
 
     for rule in rules:
-        translated_rule = translate_rule(rule.rule, attributes, antecedent_consequent_mob_arm)
+        translated_rule = translate_rule(rule.rule, attributes, antecedent_consequent_aco_r)
         print("Rule: " + translated_rule + "Objectives: " + str(rule) + "\n")
