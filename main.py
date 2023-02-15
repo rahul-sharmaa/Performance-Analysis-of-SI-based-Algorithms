@@ -1,23 +1,24 @@
+from cso.cuckoo_search import CuckooSearchOptimization
 from helpers.data_init import data_init, DataLocation, DataAttributes
-from helpers.data_queries import antecedent_consequent_mopar
+from helpers.data_queries import antecedent_consequent_mocanar
 from helpers.helper import translate_rule
-from pso.particle_search import ParticleSearchOptimization
 
 if __name__ == '__main__':
     location = DataLocation.BASKETBALL.value
     attributes = DataAttributes.BASKETBALL.value
 
-    pso = ParticleSearchOptimization(data=data_init(location, attributes),
-                                     population_size=50,
-                                     max_iterations=200,
-                                     external_repository_size=50,
-                                     c1=2, c2=2,
-                                     inertia_weight=0.63,
-                                     velocity_limit=3.83,
-                                     x_rank=13.33)
+    cso = CuckooSearchOptimization(data=data_init(location, attributes),
+                                   population_size=50,
+                                   pa=0.3,
+                                   pmut=0.05,
+                                   num_of_tourn=30,
+                                   max_generation=200,
+                                   num_of_increment=1,
+                                   num_of_rnd_cuckoo=1,
+                                   w1=0.2, w2=0.5, w3=0.3)
 
-    rules = pso.multi_objective_particle_search_optimization_algorithm()
+    rules = cso.multi_objective_cuckoo_search_algorithm()
 
     for rule in rules:
-        translated_rule = translate_rule(rule.rule, attributes, antecedent_consequent_mopar)
+        translated_rule = translate_rule(rule.rule, attributes, antecedent_consequent_mocanar)
         print("Rule: " + translated_rule + "Objectives: " + str(rule) + "\n")
